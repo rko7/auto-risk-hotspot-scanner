@@ -6,6 +6,28 @@
 </head>
 <body>
     <h1>Auto Risk Hotspot Scanner</h1>
+
+    <form id="searchForm">
+        <label>From:
+            <input type="date" id="dateFrom" required>
+        </label>
+    
+        <label>To:
+            <input type="date" id="dateTo" required>
+        </label>
+    
+        <label>Area:
+            <input type="text" id="area" placeholder="e.g. Downtown" required>
+        </label>
+    
+        <label>Limit:
+            <input type="number" id="limit" value="25" min="1" max="100">
+        </label>
+
+        <button type="submit">Search</button>
+    </form>
+    
+    <div id="results"></div>
   
     <script src="app.js"></script>
 </body>
