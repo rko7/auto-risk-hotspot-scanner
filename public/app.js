@@ -17,16 +17,22 @@ document.addEventListener("DOMContentLoaded", function () {
         console.log("sending:");
         console.log(payload);
     
-        const resp = await fetch("/api/hotspots", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(payload)
-        });
-    
-        const data = await resp.json();
-        console.log("received:");
-        console.log(data);
-    
-        results.innerHTML = "<pre>" + JSON.stringify(data, null, 2) + "</pre>";
+        try {
+            const resp = await fetch("/api/hotspots", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload)
+            });
+        
+            const data = await resp.json();
+
+            console.log("received:");
+            console.log(data);
+        
+            results.innerHTML = "<pre>" + JSON.stringify(data, null, 2) + "</pre>";
+        } catch (err) {
+            console.log(err);
+            results.innerHTML = "<p>request failed</p>";
+        }
     });
 });
