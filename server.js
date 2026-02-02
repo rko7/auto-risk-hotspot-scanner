@@ -4,9 +4,8 @@ const path = require("path");
 const app = express();
 const PORT = 3000;
 
-app.get("/app", function (req, res) {
-  res.send("Server is running. Next: serve index.html");
-});
+// serve static files
+app.use("/app", express.static(__dirname + "/public"));
 
 app.listen(PORT, function () {
   console.log("server listening on port 3000...");
