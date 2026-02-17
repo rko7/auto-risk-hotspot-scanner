@@ -8,7 +8,7 @@ document.addEventListener("DOMContentLoaded", function () {
         return String(s)
         .replace(/&/g, "&amp;")
         .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
+        .replace(/>/g, "&lt;")
         .replace(/"/g, "&quot;")
         .replace(/'/g, "&#39;");
     }
@@ -23,49 +23,85 @@ document.addEventListener("DOMContentLoaded", function () {
         return String(v);
     }
 
-    function pickColumns(attrs) {
-        // Try common field names first (safe guesses)
-        const preferred = [
-            "DATE",
-            "OCC_DATE",
-            "ACC_DATE",
-            "EVENT_DATE",
-            "D_DATE",
-            "REPORT_DATE",
-            "DISTRICT",
-            "DIVISION",
-            "NEIGHBOURHOOD",
-            "WARD",
-            "INTERSECTION",
-            "LOCATION",
-            "STREET1",
-            "STREET2",
-            "INJURY",
-            "INJURY_SEVERITY",
-            "KSI",
-            "FATAL",
-            "SERIOUS",
-            "MODE",
-            "CLASSIFICATION"
-        ];
-
-        const keys = Object.keys(attrs || {});
-        const cols = [];
-
-        for (let i = 0; i < preferred.length; i++) {
-            const k = preferred[i];
-            if (keys.indexOf(k) !== -1) cols.push(k);
-            if (cols.length >= 5) break;
-        }
-
-        // Fallback: just show first 5 keys so it never breaks
-        if (cols.length === 0) {
-            for (let j = 0; j < keys.length && j < 5; j++) {
-                cols.push(keys[j]);
+    function getField(attrs, candidates) {
+        for (let i = 0; i < candidates.length; i++) {
+            const k = candidates[i];
+            if (attrs && Object.prototype.hasOwnProperty.call(attrs, k)) {
+                return attrs[k];
             }
         }
+        return "";
+    }
 
-        return cols;
+    function topCounts(items, fieldCandidates) {
+        const counts = {};
+        for (let i = 0; i < items.length; i++) {
+            const attrs = items[i] && items[i].attributes ? items[i].attributes : {};
+            const v = getField(attrs, fieldCandidates);
+            const key = v ? String(v) : "unknown";
+            counts[key] = (counts[key] || 0) + 1;
+        }
+
+        const pairs = Object.keys(counts).map(function (k) {
+            return { key: k, count: counts[k] };
+        });
+
+        pairs.sort(function (a, b) {
+            return b.count - a.count;
+        });
+        
+        return pairs.slice(0, 3);
+    }
+
+    function renderSummary(items) {
+        const topDistricts = topCounts(items, ["DISTRICT", "DIVISION", "NEIGHBOURHOOD", "WARD"]);
+        let html = "";
+        html += "<p>items: " + items.length + "</p>";
+        html += "<p>top districts:</p>";
+        html += "<ul>";
+        for (let i = 0; i < topDistricts.length; i++) {
+            html += "<li>" + escapeHtml(topDistricts[i].key) + ": " + topDistricts[i].count + "</li>";
+            }
+        html += "</ul>";
+    
+        return html;
+    }
+    
+    function renderTable(items) {
+        let html = "";
+        html += "<table border='1' cellpadding='6' cellspacing='0'>";
+        html += "<tr>";
+        html += "<th>Date</th>";
+        html += "<th>District</th>";
+        html += "<th>Location</th>";
+        html += "<th>Severity</th>";
+        html += "</tr>";
+    
+        for (let i = 0; i < items.length; i++) {
+            const attrs = items[i] && items[i].attributes ? items[i].attributes : {};
+            const dateVal = getField(attrs, ["DATE", "OCC_DATE", "ACC_DATE", "EVENT_DATE", "REPORT_DATE"]);
+            const districtVal = getField(attrs, ["DISTRICT", "DIVISION", "NEIGHBOURHOOD", "WARD"]);
+      
+            let loc = getField(attrs, ["LOCATION", "INTERSECTION"]);
+      
+            if (!loc) {
+                const s1 = getField(attrs, ["STREET1"]);
+                const s2 = getField(attrs, ["STREET2"]);
+                if (s1 && s2) loc = s1 + " / " + s2;
+                else loc = s1 || s2 || "";
+            }
+      
+            const sev = getField(attrs, ["INJURY_SEVERITY", "INJURY", "KSI", "FATAL", "SERIOUS", "CLASSIFICATION"]);
+      
+            html += "<tr>";
+            html += "<td>" + escapeHtml(formatValue(dateVal)) + "</td>";
+            html += "<td>" + escapeHtml(formatValue(districtVal)) + "</td>";
+            html += "<td>" + escapeHtml(formatValue(loc)) + "</td>";
+            html += "<td>" + escapeHtml(formatValue(sev)) + "</td>";
+            html += "</tr>";
+        }
+        html += "</table>";
+        return html;
     }
   
     form.addEventListener("submit", async function (e) {
@@ -120,33 +156,9 @@ document.addEventListener("DOMContentLoaded", function () {
                 return;
             }
             
-            const first = items[0];
-            const attrs = first && first.attributes ? first.attributes : {};
-            const columns = pickColumns(attrs);
-
             let html = "";
-            html += "<p>items: " + items.length + "</p>";
-            html += "<table border='1' cellpadding='6' cellspacing='0'>";
-            html += "<tr>";
-
-            for (let c = 0; c < columns.length; c++) {
-                html += "<th>" + escapeHtml(columns[c]) + "</th>";
-            }
-            
-            html += "</tr>";
-            
-            for (let i = 0; i < items.length; i++) {
-                const a = items[i] && items[i].attributes ? items[i].attributes : {};
-                html += "<tr>";
-                
-                for (let c2 = 0; c2 < columns.length; c2++) {
-                    const key = columns[c2];
-                    html += "<td>" + escapeHtml(formatValue(a[key])) + "</td>";
-                }
-
-                html += "</tr>";
-            }
-            html += "</table>";
+            html += renderSummary(items);
+            html += renderTable(items);
             results.innerHTML = html;
         } catch (err) {
             console.log(err);
