@@ -13,6 +13,18 @@ app.use("/app", express.static(__dirname + "/public"));
 // parse JSON body
 app.use(express.json());
 
+function clamp(n, min, max) {
+  n = Number(n);
+  if (Number.isNaN(n)) return min;
+  if (n < min) return min;
+  if (n > max) return max;
+  return n;
+}
+
+function cleanText(s) {
+  return String(s || "").replace(/'/g, "").trim();
+}
+
 app.post("/api/hotspots", async function (req, res) {
     console.log("body:");
     console.log(req.body);
@@ -49,20 +61,26 @@ app.post("/api/hotspots", async function (req, res) {
         console.log("tps url:");
         console.log(url);
 
-    const resp = await fetch(url);
-    const data = await resp.json();
-
-    // send results back to client
-    res.json({
-      ok: true,
-      items: data.features || []
+        const resp = await fetch(url);
+        
+        // external API failed
+        if (!resp.ok) {
+          return res.status(502).json({ ok: false });
+        }
+        
+        const data = await resp.json();
+        
+        // send results back to client
+        res.json({
+          ok: true,
+          items: data.features || []
+        });
+      } catch (err) {
+        console.log(err);
+        res.status(500).json({ ok: false });
+      }
     });
-  } catch (err) {
-    console.log(err);
-    res.status(500).json({ ok: false });
-  }
-});
-
-app.listen(PORT, function () {
-    console.log("server listening on port 3000...");
-});
+    
+    app.listen(PORT, function () {
+      console.log("server listening on port 3000...");
+  });
