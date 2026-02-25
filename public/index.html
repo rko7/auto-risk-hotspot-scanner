@@ -1,41 +1,48 @@
 <!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8">
-  <title>Auto Risk Hotspot Scanner</title>
-</head>
-<body>
-  <h1>Auto Risk Hotspot Scanner</h1>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Auto Risk Hotspot Scanner</title>
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <main class="container">
+      <h1>Auto Risk Hotspot Scanner</h1>
 
-  <form id="searchForm">
-    <label>From:
-      <input type="date" id="dateFrom" required>
-    </label>
+      <form id="searchForm" class="search-form">
+        <label for="dateFrom">From:</label>
+        <input type="date" id="dateFrom" required>
 
-    <label>To:
-      <input type="date" id="dateTo" required>
-    </label>
+        <label for="dateTo">To:</label>
+        <input type="date" id="dateTo" required>
 
-    <label>Division:
-      <select id="division" required>
-        <option value="">-- select --</option>
-        <option value="51">51: Downtown</option>
-        <option value="52">52: East York</option>
-        <option value="53">53: North York</option>
-        <option value="54">54: Scarborough</option>
-        <option value="55">55: Etobicoke</option>
-      </select>
-    </label>
+        <label for="division">Police Division:</label>
+        <select id="division" required>
+          <option value="">-- select --</option>
+          <option value="51">51 Division (TPS - Parliament St)</option>
+          <option value="52">52 Division (TPS - Dundas St W)</option>
+          <option value="53">53 Division (TPS - Eglinton Ave W)</option>
+          <option value="55">55 Division (TPS - Coxwell Ave)</option>
+          <option value="41">41 Division (TPS - Birchmount Rd)</option>
+          <option value="22">22 Division (TPS - Bloor St W)</option>
+        </select>
 
-    <label>Limit:
-      <input type="number" id="limit" value="25" min="1" max="100">
-    </label>
+        <label for="limit">Limit:</label>
+        <input type="number" id="limit" value="25" min="1" max="100">
 
-    <button type="submit">Search</button>
-  </form>
+        <button type="submit" id="searchBtn">Search</button>
+      </form>
 
-  <div id="results"></div>
+      <p class="data-note" id="dataNote">
+        Note: Division labels use TPS division numbers with address-based hints for readability.
+        DISTRICT values shown in results are displayed as provided by the source dataset and may not align with division labels.
+        Legacy divisions may not appear in newer date ranges due to TPS dataset updates.
+      </p>
 
-  <script src="app.js"></script>
-</body>
+      <div id="results" aria-live="polite"></div>
+    </main>
+
+    <script src="app.js"></script>
+  </body>
 </html>
