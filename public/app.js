@@ -65,16 +65,16 @@ document.addEventListener("DOMContentLoaded", function () {
     const topSeverity = topCounts(items, ["INJURY", "ACCLASS"]);
 
     let html = "";
-    html += "<p>items: " + items.length + "</p>";
+    html += "<p><strong>Items:</strong> " + items.length + "</p>";
 
-    html += "<p>top divisions:</p>";
+    html += "<p><strong>Top Divisions:</strong></p>";
     html += "<ul>";
     for (let i = 0; i < topDivisions.length; i++) {
       html += "<li>" + escapeHtml(topDivisions[i].key) + ": " + topDivisions[i].count + "</li>";
     }
     html += "</ul>";
 
-    html += "<p>top severity:</p>";
+    html += "<p><strong>Top Severity:</strong></p>";
     html += "<ul>";
     for (let i = 0; i < topSeverity.length; i++) {
       html += "<li>" + escapeHtml(topSeverity[i].key) + ": " + topSeverity[i].count + "</li>";
@@ -125,8 +125,9 @@ document.addEventListener("DOMContentLoaded", function () {
 
       // append available range once to avoid duplicate note text
       if (dataNote && minISO && maxISO && !dataNote.dataset.rangeLoaded) {
-        dataNote.innerHTML += "<br>Available dataset date range: " +
-          escapeHtml(minISO) + " to " + escapeHtml(maxISO) + ".";
+        dataNote.innerHTML += "<br><span class='range-line'>Available dataset date range: " +
+        "<span class='range-date'>" + escapeHtml(minISO) + "</span> to " +
+        "<span class='range-date'>" + escapeHtml(maxISO) + "</span>.</span>";
         dataNote.dataset.rangeLoaded = "1";
       }
     } catch (err) {
