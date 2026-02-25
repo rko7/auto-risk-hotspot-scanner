@@ -11,27 +11,47 @@
       <h1>Toronto Auto Risk Hotspot Scanner</h1>
 
       <form id="searchForm" class="search-form">
-        <label for="dateFrom">From:</label>
-        <input type="date" id="dateFrom" required>
+        <div class="field-group field-date">
+          <label for="dateFrom">From:</label>
+          <input type="date" id="dateFrom" required>
+        </div>
 
-        <label for="dateTo">To:</label>
-        <input type="date" id="dateTo" required>
+        <div class="field-group field-date">
+          <label for="dateTo">To:</label>
+          <input type="date" id="dateTo" required>
+        </div>
 
-        <label for="division">Police Division:</label>
-        <select id="division" required>
-          <option value="">-- select --</option>
-          <option value="51">51 Division (TPS - Parliament St)</option>
-          <option value="52">52 Division (TPS - Dundas St W)</option>
-          <option value="53">53 Division (TPS - Eglinton Ave W)</option>
-          <option value="55">55 Division (TPS - Coxwell Ave)</option>
-          <option value="41">41 Division (TPS - Birchmount Rd)</option>
-          <option value="22">22 Division (TPS - Bloor St W)</option>
-        </select>
+        <div class="field-group field-division">
+          <label for="division">Police Division:</label>
+          <select id="division" required>
+            <option value="">-- select --</option>
+            <option value="51">51 Division (TPS - Parliament St)</option>
+            <option value="52">52 Division (TPS - Dundas St W)</option>
+            <option value="53">53 Division (TPS - Eglinton Ave W)</option>
+            <option value="55">55 Division (TPS - Coxwell Ave)</option>
+            <option value="41">41 Division (TPS - Birchmount Rd)</option>
+            <option value="22">22 Division (TPS - Bloor St W)</option>
+          </select>
+        </div>
 
-        <label for="limit">Limit:</label>
-        <input type="number" id="limit" value="25" min="1" max="100">
+        <div class="field-group field-severity">
+          <label for="severity">Severity:</label>
+          <select id="severity">
+            <option value="">All</option>
+            <option value="Fatal">Fatal</option>
+            <option value="Major">Major</option>
+            <option value="Minor">Minor</option>
+            <option value="Minimal">Minimal</option>
+            <option value="None">None</option>
+            <option value="Property Damage Only">Property Damage Only</option>
+          </select>
+        </div>
 
-        <button type="submit" id="searchBtn">Search</button>
+        <div class="field-group field-actions">
+          <label for="limit">Limit:</label>
+          <input type="number" id="limit" value="25" min="1" max="100">
+          <button type="submit" id="searchBtn">Search</button>
+        </div>
       </form>
 
       <p class="data-note" id="dataNote">

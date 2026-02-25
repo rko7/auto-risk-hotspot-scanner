@@ -61,6 +61,17 @@ function buildDivisionWhere(division) {
   return `(DIVISION = '${targetDiv}' OR DIVISION = '${cleanDivNum}')`;
 }
 
+// build optional severity where (supports INJURY / ACCLASS)
+function buildSeverityWhere(severity) {
+  const s = String(severity || "").trim();
+  if (!s) return null;
+
+  // basic escaping for single quotes
+  const escaped = s.replace(/'/g, "''");
+
+  return `(INJURY = '${escaped}' OR ACCLASS = '${escaped}')`;
+}
+
 // only print fields once
 let printedFields = false;
 
@@ -72,6 +83,7 @@ app.post("/api/hotspots", async function (req, res) {
   const dateFrom = cleanText(req.body.dateFrom);
   const dateTo = cleanText(req.body.dateTo);
   const division = cleanText(req.body.division); // code like "51"
+  const severity = cleanText(req.body.severity); // optional
   const limit = clamp(req.body.limit || 25, 1, 100);
 
   // basic input check
@@ -90,11 +102,17 @@ app.post("/api/hotspots", async function (req, res) {
   }
 
   // build ArcGIS SQL where condition
-  const where = `${dateWhere} AND ${divisionWhere}`;
+  let where = `${dateWhere} AND ${divisionWhere}`;
+
+  const severityWhere = buildSeverityWhere(severity);
+  if (severityWhere) {
+    where = `${where} AND ${severityWhere}`;
+  }
 
   const params = new URLSearchParams({
     where: where,
     outFields: "*",
+    orderByFields: "DATE DESC",
     resultRecordCount: String(limit),
     returnGeometry: "false",
     f: "json"

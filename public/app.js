@@ -91,7 +91,13 @@ document.addEventListener("DOMContentLoaded", function () {
     html += "(limit <strong class='search-summary-value'>" + escapeHtml(String(payload.limit)) + "</strong>) ";
     html += "for <strong class='search-summary-value'>Division " + escapeHtml(String(payload.division)) + "</strong> ";
     html += "from <strong class='search-summary-value'>" + escapeHtml(payload.dateFrom) + "</strong> ";
-    html += "to <strong class='search-summary-value'>" + escapeHtml(payload.dateTo) + "</strong>.";
+    html += "to <strong class='search-summary-value'>" + escapeHtml(payload.dateTo) + "</strong>";
+
+    if (payload.severity) {
+      html += " with <strong class='search-summary-value'>Severity " + escapeHtml(payload.severity) + "</strong>";
+    }
+
+    html += ".";
     html += "</p>";
     html += "</div>";
     return html;
@@ -140,9 +146,9 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   function setInitialMessage() {
-  results.innerHTML =
-    "<p>Select a <strong>Date Range</strong> and <strong>Police Division</strong>, then click <strong>Search</strong>.</p>";
-}
+    results.innerHTML =
+      "<p>Select a <strong>Date Range</strong> and <strong>Police Division</strong>, then click <strong>Search</strong>.</p>";
+  }
 
   async function loadDateBounds() {
     try {
@@ -188,6 +194,7 @@ document.addEventListener("DOMContentLoaded", function () {
     const dateFrom = document.getElementById("dateFrom").value;
     const dateTo = document.getElementById("dateTo").value;
     const division = document.getElementById("division").value;
+    const severity = document.getElementById("severity").value;
     const limit = Number(document.getElementById("limit").value || 25);
 
     // simple client checks
@@ -204,6 +211,7 @@ document.addEventListener("DOMContentLoaded", function () {
       dateFrom: dateFrom,
       dateTo: dateTo,
       division: division,
+      severity: severity,
       limit: limit
     };
 
@@ -233,7 +241,7 @@ document.addEventListener("DOMContentLoaded", function () {
       const items = data.items || [];
       if (!items.length) {
         results.innerHTML =
-          "<p>No results found for the selected filters. Try a wider date range or another division.</p>";
+          "<p>No results found for the selected filters. Try a wider date range, another division, or a different severity.</p>";
         return;
       }
 
