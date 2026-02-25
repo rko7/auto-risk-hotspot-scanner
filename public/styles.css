@@ -177,6 +177,32 @@ h1 {
   font-family: Consolas, "Courier New", monospace;
 }
 
+/* Search summary box */
+.search-summary-box {
+  margin: 10px 0 12px;
+  padding: 10px 12px;
+  background: #f3faf4; 
+  border-left: 4px solid #2f6f44;
+  border-radius: 4px;
+  color: #1f2937;
+}
+
+.search-summary-line {
+  margin: 0;
+  font-family: "Segoe UI", Tahoma, Arial, sans-serif;
+}
+
+.search-summary-label {
+  color: #1f2937;
+  font-weight: 700;
+}
+
+.search-summary-value {
+  font-weight: 700;
+  color: inherit;
+  font-size: inherit;
+}
+
 /* Responsive */
 @media (max-width: 900px) {
   .search-form {

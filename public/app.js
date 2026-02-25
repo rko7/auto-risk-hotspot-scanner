@@ -3,8 +3,6 @@ console.log("client js loaded");
 document.addEventListener("DOMContentLoaded", function () {
   const form = document.getElementById("searchForm");
   const results = document.getElementById("results");
-  const dateFromInput = document.getElementById("dateFrom");
-  const dateToInput = document.getElementById("dateTo");
   const dataNote = document.getElementById("dataNote");
 
   function escapeHtml(s) {
@@ -84,56 +82,19 @@ document.addEventListener("DOMContentLoaded", function () {
     return html;
   }
 
-  function applyDateBounds(minISO, maxISO) {
-    if (!minISO || !maxISO) return;
-
-    // set dataset-wide valid range on both date inputs
-    dateFromInput.min = minISO;
-    dateFromInput.max = maxISO;
-    dateToInput.min = minISO;
-    dateToInput.max = maxISO;
-  }
-
-  function syncDateRangeBounds() {
-    // keep from/to inputs mutually valid after user changes one side
-    if (dateFromInput.value) {
-      dateToInput.min = dateFromInput.value;
-    } else if (dateFromInput.min) {
-      dateToInput.min = dateFromInput.min;
-    }
-
-    if (dateToInput.value) {
-      dateFromInput.max = dateToInput.value;
-    } else if (dateToInput.max) {
-      dateFromInput.max = dateToInput.max;
-    }
-  }
-
-  async function loadDatasetDateBounds() {
-    try {
-      const resp = await fetch("/api/debug/minmax");
-      if (!resp.ok) return;
-
-      const data = await resp.json();
-      if (!data || !data.ok) return;
-
-      const minISO = data.minISO;
-      const maxISO = data.maxISO;
-
-      applyDateBounds(minISO, maxISO);
-      syncDateRangeBounds();
-
-      // append available range once to avoid duplicate note text
-      if (dataNote && minISO && maxISO && !dataNote.dataset.rangeLoaded) {
-        dataNote.innerHTML += "<br><span class='range-line'>Available dataset date range: " +
-        "<span class='range-date'>" + escapeHtml(minISO) + "</span> to " +
-        "<span class='range-date'>" + escapeHtml(maxISO) + "</span>.</span>";
-        dataNote.dataset.rangeLoaded = "1";
-      }
-    } catch (err) {
-      console.log(err);
-      // fail silently so the app still works even if min/max lookup fails
-    }
+  function renderSearchContext(payload, returnedCount) {
+    let html = "";
+    html += "<div class='search-summary-box'>";
+    html += "<p class='search-summary-line'>";
+    html += "<strong class='search-summary-label'>Search Summary:</strong> ";
+    html += "Showing <strong class='search-summary-value'>" + escapeHtml(String(returnedCount)) + "</strong> result(s) ";
+    html += "(limit <strong class='search-summary-value'>" + escapeHtml(String(payload.limit)) + "</strong>) ";
+    html += "for <strong class='search-summary-value'>Division " + escapeHtml(String(payload.division)) + "</strong> ";
+    html += "from <strong class='search-summary-value'>" + escapeHtml(payload.dateFrom) + "</strong> ";
+    html += "to <strong class='search-summary-value'>" + escapeHtml(payload.dateTo) + "</strong>.";
+    html += "</p>";
+    html += "</div>";
+    return html;
   }
 
   function renderTable(items) {
@@ -178,12 +139,48 @@ document.addEventListener("DOMContentLoaded", function () {
     return html;
   }
 
-  // update date picker limits as the user changes either side
-  dateFromInput.addEventListener("change", syncDateRangeBounds);
-  dateToInput.addEventListener("change", syncDateRangeBounds);
+  function setInitialMessage() {
+  results.innerHTML =
+    "<p>Select a <strong>Date Range</strong> and <strong>Police Division</strong>, then click <strong>Search</strong>.</p>";
+}
 
-  // load dataset min/max dates and apply input bounds on page load
-  loadDatasetDateBounds();
+  async function loadDateBounds() {
+    try {
+      const resp = await fetch("/api/debug/minmax");
+      if (!resp.ok) return;
+
+      const data = await resp.json();
+      if (!data || !data.ok) return;
+
+      const minISO = data.minISO;
+      const maxISO = data.maxISO;
+
+      if (!minISO || !maxISO) return;
+
+      const dateFromInput = document.getElementById("dateFrom");
+      const dateToInput = document.getElementById("dateTo");
+
+      // limit selectable dates to available dataset range
+      dateFromInput.min = minISO;
+      dateFromInput.max = maxISO;
+      dateToInput.min = minISO;
+      dateToInput.max = maxISO;
+
+      // append dynamic date range note once
+      if (dataNote && !dataNote.dataset.rangeLoaded) {
+        dataNote.innerHTML +=
+          "<span class='range-line'>Available dataset date range: " +
+          "<span class='range-date'>" + escapeHtml(minISO) + "</span> to " +
+          "<span class='range-date'>" + escapeHtml(maxISO) + "</span>.</span>";
+        dataNote.dataset.rangeLoaded = "1";
+      }
+    } catch (err) {
+      console.log(err);
+    }
+  }
+
+  setInitialMessage();
+  loadDateBounds();
 
   form.addEventListener("submit", async function (e) {
     e.preventDefault();
@@ -195,11 +192,11 @@ document.addEventListener("DOMContentLoaded", function () {
 
     // simple client checks
     if (!dateFrom || !dateTo || !division) {
-      results.innerHTML = "<p>missing input</p>";
+      results.innerHTML = "<p>Please fill in all required fields.</p>";
       return;
     }
     if (dateFrom > dateTo) {
-      results.innerHTML = "<p>date range is invalid</p>";
+      results.innerHTML = "<p>From date must be on or before To date.</p>";
       return;
     }
 
@@ -213,7 +210,7 @@ document.addEventListener("DOMContentLoaded", function () {
     console.log("sending:");
     console.log(payload);
 
-    results.innerHTML = "<p>loading...</p>";
+    results.innerHTML = "<p>Loading results...</p>";
 
     try {
       const resp = await fetch("/api/hotspots", {
@@ -224,7 +221,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
       if (!resp.ok) {
         const txt = await resp.text().catch(function () { return ""; });
-        results.innerHTML = "<p>server error</p><pre>" + escapeHtml(txt) + "</pre>";
+        results.innerHTML = "<p>Server error while loading results.</p><pre>" + escapeHtml(txt) + "</pre>";
         return;
       }
 
@@ -235,17 +232,19 @@ document.addEventListener("DOMContentLoaded", function () {
 
       const items = data.items || [];
       if (!items.length) {
-        results.innerHTML = "<p>no results</p>";
+        results.innerHTML =
+          "<p>No results found for the selected filters. Try a wider date range or another division.</p>";
         return;
       }
 
       let html = "";
+      html += renderSearchContext(payload, items.length);
       html += renderSummary(items);
       html += renderTable(items);
       results.innerHTML = html;
     } catch (err) {
       console.log(err);
-      results.innerHTML = "<p>request failed</p>";
+      results.innerHTML = "<p>Request failed. Please try again.</p>";
     }
   });
 });
