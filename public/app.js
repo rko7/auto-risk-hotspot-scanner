@@ -82,6 +82,32 @@ document.addEventListener("DOMContentLoaded", function () {
     return html;
   }
 
+  function renderBarChart(title, pairs, totalCount) {
+    if (!pairs || !pairs.length || !totalCount) return "";
+
+    let html = "";
+    html += "<div class='summary-chart'>";
+    html += "<p class='chart-title'>" + escapeHtml(title) + "</p>";
+
+    for (let i = 0; i < pairs.length; i++) {
+      const item = pairs[i];
+      const pct = Math.round((item.count / totalCount) * 100);
+
+      html += "<div class='chart-row'>";
+      html += "<div class='chart-row-head'>";
+      html += "<span class='chart-label'>" + escapeHtml(item.key) + "</span>";
+      html += "<span class='chart-value'>" + item.count + " (" + pct + "%)</span>";
+      html += "</div>";
+      html += "<div class='chart-track'>";
+      html += "<div class='chart-fill' style='width: " + pct + "%'></div>";
+      html += "</div>";
+      html += "</div>";
+    }
+
+    html += "</div>";
+    return html;
+  }
+
   function renderSummary(items, meta) {
     const topDivisions = topCounts(items, ["DIVISION"]);
     const topSeverity = topCounts(items, ["INJURY", "ACCLASS"]);
@@ -107,6 +133,9 @@ document.addEventListener("DOMContentLoaded", function () {
       html += "<li><strong>" + escapeHtml(topSeverity[i].key) + "</strong>: " + topSeverity[i].count + "</li>";
     }
     html += "</ul>";
+
+    // add small visual chart for professional display
+    html += renderBarChart("Severity Distribution", topSeverity, items.length);
 
     return html;
   }
@@ -257,7 +286,7 @@ document.addEventListener("DOMContentLoaded", function () {
       const dateFromInput = document.getElementById("dateFrom");
       const dateToInput = document.getElementById("dateTo");
 
-      if (minISO && maxISO) {
+      if (minISO && maxISO && dateFromInput && dateToInput) {
         dateFromInput.min = minISO;
         dateFromInput.max = maxISO;
         dateToInput.min = minISO;
@@ -287,12 +316,14 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   }
 
-  exportCsvBtn.addEventListener("click", function () {
-    if (!lastItems || !lastItems.length) return;
+  if (exportCsvBtn) {
+    exportCsvBtn.addEventListener("click", function () {
+      if (!lastItems || !lastItems.length) return;
 
-    const csvText = buildCsv(lastItems);
-    downloadCsv(makeCsvFileName(), csvText);
-  });
+      const csvText = buildCsv(lastItems);
+      downloadCsv(makeCsvFileName(), csvText);
+    });
+  }
 
   showInitialHint();
   loadDatasetDateRange();

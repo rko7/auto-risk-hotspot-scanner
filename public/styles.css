@@ -244,6 +244,64 @@ h1 {
   font-family: Consolas, "Courier New", monospace;
 }
 
+/* Summary mini bar chart */
+.summary-chart {
+  margin: 12px 0 16px;
+  padding: 10px 12px;
+  background: #f8fafc;
+  border: 1px solid #dbe3ee;
+  border-radius: 6px;
+}
+
+.chart-title {
+  margin: 0 0 10px;
+  font-weight: 700;
+  color: #012169;
+}
+
+.chart-row {
+  margin: 0 0 10px;
+}
+
+.chart-row:last-child {
+  margin-bottom: 0;
+}
+
+.chart-row-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 10px;
+  margin-bottom: 4px;
+}
+
+.chart-label {
+  font-weight: 700;
+  color: #111827;
+}
+
+.chart-value {
+  color: #374151;
+  font-size: 0.95rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.chart-track {
+  width: 100%;
+  height: 10px;
+  background: #e8eef7;
+  border: 1px solid #dbe3ee;
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.chart-fill {
+  height: 100%;
+  background: #012169; /* Ontario blue */
+  border-radius: 999px;
+  min-width: 2px; /* tiny values still visible */
+}
+
 /* Medium screens */
 @media (max-width: 980px) {
   .search-form {
