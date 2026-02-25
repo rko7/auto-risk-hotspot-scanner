@@ -3,6 +3,9 @@ console.log("client js loaded");
 document.addEventListener("DOMContentLoaded", function () {
   const form = document.getElementById("searchForm");
   const results = document.getElementById("results");
+  const dateFromInput = document.getElementById("dateFrom");
+  const dateToInput = document.getElementById("dateTo");
+  const dataNote = document.getElementById("dataNote");
 
   function escapeHtml(s) {
     return String(s)
@@ -58,18 +61,11 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   function renderSummary(items) {
-    const topDistricts = topCounts(items, ["DISTRICT"]);
     const topDivisions = topCounts(items, ["DIVISION"]);
+    const topSeverity = topCounts(items, ["INJURY", "ACCLASS"]);
 
     let html = "";
     html += "<p>items: " + items.length + "</p>";
-
-    html += "<p>top districts:</p>";
-    html += "<ul>";
-    for (let i = 0; i < topDistricts.length; i++) {
-      html += "<li>" + escapeHtml(topDistricts[i].key) + ": " + topDistricts[i].count + "</li>";
-    }
-    html += "</ul>";
 
     html += "<p>top divisions:</p>";
     html += "<ul>";
@@ -78,7 +74,65 @@ document.addEventListener("DOMContentLoaded", function () {
     }
     html += "</ul>";
 
+    html += "<p>top severity:</p>";
+    html += "<ul>";
+    for (let i = 0; i < topSeverity.length; i++) {
+      html += "<li>" + escapeHtml(topSeverity[i].key) + ": " + topSeverity[i].count + "</li>";
+    }
+    html += "</ul>";
+
     return html;
+  }
+
+  function applyDateBounds(minISO, maxISO) {
+    if (!minISO || !maxISO) return;
+
+    // set dataset-wide valid range on both date inputs
+    dateFromInput.min = minISO;
+    dateFromInput.max = maxISO;
+    dateToInput.min = minISO;
+    dateToInput.max = maxISO;
+  }
+
+  function syncDateRangeBounds() {
+    // keep from/to inputs mutually valid after user changes one side
+    if (dateFromInput.value) {
+      dateToInput.min = dateFromInput.value;
+    } else if (dateFromInput.min) {
+      dateToInput.min = dateFromInput.min;
+    }
+
+    if (dateToInput.value) {
+      dateFromInput.max = dateToInput.value;
+    } else if (dateToInput.max) {
+      dateFromInput.max = dateToInput.max;
+    }
+  }
+
+  async function loadDatasetDateBounds() {
+    try {
+      const resp = await fetch("/api/debug/minmax");
+      if (!resp.ok) return;
+
+      const data = await resp.json();
+      if (!data || !data.ok) return;
+
+      const minISO = data.minISO;
+      const maxISO = data.maxISO;
+
+      applyDateBounds(minISO, maxISO);
+      syncDateRangeBounds();
+
+      // append available range once to avoid duplicate note text
+      if (dataNote && minISO && maxISO && !dataNote.dataset.rangeLoaded) {
+        dataNote.innerHTML += "<br>Available dataset date range: " +
+          escapeHtml(minISO) + " to " + escapeHtml(maxISO) + ".";
+        dataNote.dataset.rangeLoaded = "1";
+      }
+    } catch (err) {
+      console.log(err);
+      // fail silently so the app still works even if min/max lookup fails
+    }
   }
 
   function renderTable(items) {
@@ -122,6 +176,13 @@ document.addEventListener("DOMContentLoaded", function () {
     html += "</table>";
     return html;
   }
+
+  // update date picker limits as the user changes either side
+  dateFromInput.addEventListener("change", syncDateRangeBounds);
+  dateToInput.addEventListener("change", syncDateRangeBounds);
+
+  // load dataset min/max dates and apply input bounds on page load
+  loadDatasetDateBounds();
 
   form.addEventListener("submit", async function (e) {
     e.preventDefault();
