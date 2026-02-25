@@ -43,7 +43,8 @@ h1 {
   border-radius: 4px;
   background: #fff;
   color: #111827;
-  font: inherit;
+  font-family: "Segoe UI", Tahoma, Arial, sans-serif;
+  font-size: 1rem;
 }
 
 .search-form select {
@@ -54,13 +55,15 @@ h1 {
   width: 72px;
 }
 
+/* Button */
 #searchBtn {
   padding: 4px 10px;
   border: 1px solid #012169;
   border-radius: 4px;
   background: #f7f9fc;
   color: #012169;
-  font: inherit;
+  font-family: "Segoe UI", Tahoma, Arial, sans-serif;
+  font-size: 1rem;
   font-weight: 700;
   cursor: pointer;
 }
@@ -141,10 +144,28 @@ h1 {
   background: #fbfdff;
 }
 
+/* Readability tweaks for data text */
+#results p,
+#results ul,
+#results li,
+#results td {
+  font-family: "Segoe UI", Tahoma, Arial, sans-serif;
+}
+
+#results li {
+  line-height: 1.45;
+}
+
+#results p strong {
+  color: #012169;
+}
+
+/* Error block */
 #results pre {
   background: #fff7f7;
   border: 1px solid #e5c2c7;
   padding: 10px;
   overflow-x: auto;
   white-space: pre-wrap;
+  font-family: Consolas, "Courier New", monospace;
 }
