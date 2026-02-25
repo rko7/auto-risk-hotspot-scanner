@@ -11,6 +11,7 @@ A small full-stack web app that lets users search Toronto Police Service (TPS) K
   - **Limit**
 - Backend proxy to TPS ArcGIS Open Data API
 - Summary section (item count, top divisions, top severity)
+- Simple bar chart visualization (severity distribution summary, built with HTML/CSS rendering in JavaScript)
 - Results table (Date, District, Division, Location, Severity)
 - CSV export for current search results
 - Dynamic dataset date range note (min/max from source data)
@@ -57,14 +58,18 @@ http://localhost:3000/app
 ### API Flow (End-to-End)
 1. User enters search inputs on the frontend form.
 2. Frontend sends an AJAX POST request to:
- - /api/hotspots
+ - `/api/hotspots`
 3. Express backend:
  - validates inputs
- - builds ArcGIS where query 
+ - builds ArcGIS `where` query
+ - applies optional severity filter
+ - applies sorting (`DATE DESC`) 
  - calls TPS ArcGIS API
  - returns JSON results
 4. Frontend renders:
+ - search summary context
  - summary statistics
+ - search summary context
  - results table
  - CSV export uses current results in memory
 
@@ -86,4 +91,6 @@ http://localhost:3000/app
 - Backend route processing with Express
 - Third-party Web API integration
 - Dynamic rendering of API results
+- Simple client-side data visualization (bar chart summary)
+- CSV export of filtered results
 - Git-based development with incremental commits
