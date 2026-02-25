@@ -70,14 +70,14 @@ document.addEventListener("DOMContentLoaded", function () {
     html += "<p><strong>Top Divisions:</strong></p>";
     html += "<ul>";
     for (let i = 0; i < topDivisions.length; i++) {
-      html += "<li>" + escapeHtml(topDivisions[i].key) + ": " + topDivisions[i].count + "</li>";
+      html += "<li><strong>" + escapeHtml(topDivisions[i].key) + "</strong>: " + topDivisions[i].count + "</li>";
     }
     html += "</ul>";
 
     html += "<p><strong>Top Severity:</strong></p>";
     html += "<ul>";
     for (let i = 0; i < topSeverity.length; i++) {
-      html += "<li>" + escapeHtml(topSeverity[i].key) + ": " + topSeverity[i].count + "</li>";
+      html += "<li><strong>" + escapeHtml(topSeverity[i].key) + "</strong>: " + topSeverity[i].count + "</li>";
     }
     html += "</ul>";
 

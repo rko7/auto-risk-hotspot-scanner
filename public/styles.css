@@ -101,6 +101,7 @@ h1 {
 .data-note .range-date {
   font-weight: 700;
   color: #012169;
+  font-family: "Segoe UI", Tahoma, Arial, sans-serif;
 }
 
 /* Divider */
@@ -160,6 +161,12 @@ h1 {
   color: #012169;
 }
 
+#results li strong {
+  font-weight: 700;
+  color: inherit;
+  font-size: inherit;
+}
+
 /* Error block */
 #results pre {
   background: #fff7f7;
@@ -168,4 +175,34 @@ h1 {
   overflow-x: auto;
   white-space: pre-wrap;
   font-family: Consolas, "Courier New", monospace;
+}
+
+/* Responsive */
+@media (max-width: 900px) {
+  .search-form {
+    gap: 8px 10px;
+  }
+
+  .search-form select {
+    min-width: 220px;
+  }
+}
+
+@media (max-width: 640px) {
+  .search-form {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .search-form label {
+    margin-top: 4px;
+  }
+
+  .search-form select,
+  .search-form input[type="date"],
+  .search-form input[type="number"],
+  #searchBtn {
+    width: 100%;
+    box-sizing: border-box;
+  }
 }
