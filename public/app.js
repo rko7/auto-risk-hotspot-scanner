@@ -3,7 +3,13 @@ console.log("client js loaded");
 document.addEventListener("DOMContentLoaded", function () {
   const form = document.getElementById("searchForm");
   const results = document.getElementById("results");
+  const resultsToolbar = document.getElementById("resultsToolbar");
+  const exportCsvBtn = document.getElementById("exportCsvBtn");
+  const searchBtn = document.getElementById("searchBtn");
   const dataNote = document.getElementById("dataNote");
+
+  let lastItems = [];
+  let lastQueryMeta = null;
 
   function escapeHtml(s) {
     return String(s)
@@ -58,11 +64,34 @@ document.addEventListener("DOMContentLoaded", function () {
     return pairs.slice(0, 3);
   }
 
-  function renderSummary(items) {
+  function buildSearchSummary(meta, count) {
+    let html = "";
+    html += "<div class='search-summary-box'>";
+    html += "<p class='search-summary-line'>";
+    html += "<span class='search-summary-label'>Search Summary:</span> ";
+    html += "Showing <span class='search-summary-value'>" + escapeHtml(count) + "</span> result(s) ";
+    html += "(limit <span class='search-summary-value'>" + escapeHtml(meta.limit) + "</span>) ";
+    html += "for <span class='search-summary-value'>Division " + escapeHtml(meta.division) + "</span> ";
+    if (meta.severity) {
+      html += "with <span class='search-summary-value'>Severity " + escapeHtml(meta.severity) + "</span> ";
+    }
+    html += "from <span class='search-summary-value'>" + escapeHtml(meta.dateFrom) + "</span> ";
+    html += "to <span class='search-summary-value'>" + escapeHtml(meta.dateTo) + "</span>.";
+    html += "</p>";
+    html += "</div>";
+    return html;
+  }
+
+  function renderSummary(items, meta) {
     const topDivisions = topCounts(items, ["DIVISION"]);
     const topSeverity = topCounts(items, ["INJURY", "ACCLASS"]);
 
     let html = "";
+
+    if (meta) {
+      html += buildSearchSummary(meta, items.length);
+    }
+
     html += "<p><strong>Items:</strong> " + items.length + "</p>";
 
     html += "<p><strong>Top Divisions:</strong></p>";
@@ -82,25 +111,29 @@ document.addEventListener("DOMContentLoaded", function () {
     return html;
   }
 
-  function renderSearchContext(payload, returnedCount) {
-    let html = "";
-    html += "<div class='search-summary-box'>";
-    html += "<p class='search-summary-line'>";
-    html += "<strong class='search-summary-label'>Search Summary:</strong> ";
-    html += "Showing <strong class='search-summary-value'>" + escapeHtml(String(returnedCount)) + "</strong> result(s) ";
-    html += "(limit <strong class='search-summary-value'>" + escapeHtml(String(payload.limit)) + "</strong>) ";
-    html += "for <strong class='search-summary-value'>Division " + escapeHtml(String(payload.division)) + "</strong> ";
-    html += "from <strong class='search-summary-value'>" + escapeHtml(payload.dateFrom) + "</strong> ";
-    html += "to <strong class='search-summary-value'>" + escapeHtml(payload.dateTo) + "</strong>";
+  function getRowView(attrs) {
+    const dateVal = getField(attrs, ["DATE"]);
+    const districtVal = getField(attrs, ["DISTRICT"]);
+    const divisionVal = getField(attrs, ["DIVISION"]);
 
-    if (payload.severity) {
-      html += " with <strong class='search-summary-value'>Severity " + escapeHtml(payload.severity) + "</strong>";
+    let loc = getField(attrs, ["LOCATION", "INTERSECTION"]);
+
+    if (!loc) {
+      const s1 = getField(attrs, ["STREET1"]);
+      const s2 = getField(attrs, ["STREET2"]);
+      if (s1 && s2) loc = s1 + " / " + s2;
+      else loc = s1 || s2 || "";
     }
 
-    html += ".";
-    html += "</p>";
-    html += "</div>";
-    return html;
+    const sev = getField(attrs, ["INJURY", "ACCLASS"]);
+
+    return {
+      date: formatValue(dateVal),
+      district: districtVal ? String(districtVal) : "(missing)",
+      division: divisionVal ? String(divisionVal) : "(missing)",
+      location: formatValue(loc),
+      severity: formatValue(sev)
+    };
   }
 
   function renderTable(items) {
@@ -116,28 +149,14 @@ document.addEventListener("DOMContentLoaded", function () {
 
     for (let i = 0; i < items.length; i++) {
       const attrs = items[i] && items[i].attributes ? items[i].attributes : {};
-
-      const dateVal = getField(attrs, ["DATE"]);
-      const districtVal = getField(attrs, ["DISTRICT"]);
-      const divisionVal = getField(attrs, ["DIVISION"]);
-
-      let loc = getField(attrs, ["LOCATION", "INTERSECTION"]);
-
-      if (!loc) {
-        const s1 = getField(attrs, ["STREET1"]);
-        const s2 = getField(attrs, ["STREET2"]);
-        if (s1 && s2) loc = s1 + " / " + s2;
-        else loc = s1 || s2 || "";
-      }
-
-      const sev = getField(attrs, ["INJURY", "ACCLASS"]);
+      const row = getRowView(attrs);
 
       html += "<tr>";
-      html += "<td>" + escapeHtml(formatValue(dateVal)) + "</td>";
-      html += "<td>" + escapeHtml(districtVal ? String(districtVal) : "(missing)") + "</td>";
-      html += "<td>" + escapeHtml(divisionVal ? String(divisionVal) : "(missing)") + "</td>";
-      html += "<td>" + escapeHtml(formatValue(loc)) + "</td>";
-      html += "<td>" + escapeHtml(formatValue(sev)) + "</td>";
+      html += "<td>" + escapeHtml(row.date) + "</td>";
+      html += "<td>" + escapeHtml(row.district) + "</td>";
+      html += "<td>" + escapeHtml(row.division) + "</td>";
+      html += "<td>" + escapeHtml(row.location) + "</td>";
+      html += "<td>" + escapeHtml(row.severity) + "</td>";
       html += "</tr>";
     }
 
@@ -145,12 +164,84 @@ document.addEventListener("DOMContentLoaded", function () {
     return html;
   }
 
-  function setInitialMessage() {
-    results.innerHTML =
-      "<p>Select a <strong>Date Range</strong> and <strong>Police Division</strong>, then click <strong>Search</strong>.</p>";
+  function csvEscape(value) {
+    const s = String(value === null || value === undefined ? "" : value);
+    if (s.includes('"') || s.includes(",") || s.includes("\n")) {
+      return '"' + s.replace(/"/g, '""') + '"';
+    }
+    return s;
   }
 
-  async function loadDateBounds() {
+  function buildCsv(items) {
+    const lines = [];
+    lines.push(["Date", "District", "Division", "Location", "Severity"].join(","));
+
+    for (let i = 0; i < items.length; i++) {
+      const attrs = items[i] && items[i].attributes ? items[i].attributes : {};
+      const row = getRowView(attrs);
+
+      lines.push([
+        csvEscape(row.date),
+        csvEscape(row.district),
+        csvEscape(row.division),
+        csvEscape(row.location),
+        csvEscape(row.severity)
+      ].join(","));
+    }
+
+    return lines.join("\n");
+  }
+
+  function downloadCsv(filename, csvText) {
+    const blob = new Blob([csvText], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+
+    URL.revokeObjectURL(url);
+  }
+
+  function makeCsvFileName() {
+    const from = lastQueryMeta && lastQueryMeta.dateFrom ? lastQueryMeta.dateFrom : "from";
+    const to = lastQueryMeta && lastQueryMeta.dateTo ? lastQueryMeta.dateTo : "to";
+    const div = lastQueryMeta && lastQueryMeta.division ? lastQueryMeta.division : "all";
+    const sev = lastQueryMeta && lastQueryMeta.severity ? ("_" + String(lastQueryMeta.severity).replace(/\s+/g, "-")) : "";
+    return "toronto_hotspots_div" + div + sev + "_" + from + "_to_" + to + ".csv";
+  }
+
+  function setLoadingState(isLoading) {
+    if (!searchBtn) return;
+    searchBtn.disabled = !!isLoading;
+    searchBtn.textContent = isLoading ? "Loading..." : "Search";
+  }
+
+  function showInitialHint() {
+    results.innerHTML = "<p>Select a <strong>Date Range</strong> and <strong>Police Division</strong>, then click <strong>Search</strong>.</p>";
+  }
+
+  function appendDatasetRangeToNote(minISO, maxISO) {
+    if (!dataNote) return;
+    if (!minISO || !maxISO) return;
+
+    // avoid duplicate line if this runs again
+    if (dataNote.querySelector(".range-line")) return;
+
+    const span = document.createElement("span");
+    span.className = "range-line";
+    span.innerHTML =
+      "<br><br>&nbsp;&nbsp;Available dataset date range: " +
+      "<span class='range-date'>" + escapeHtml(minISO) + "</span> to " +
+      "<span class='range-date'>" + escapeHtml(maxISO) + "</span>.";
+
+    dataNote.appendChild(span);
+  }
+
+  async function loadDatasetDateRange() {
     try {
       const resp = await fetch("/api/debug/minmax");
       if (!resp.ok) return;
@@ -158,35 +249,53 @@ document.addEventListener("DOMContentLoaded", function () {
       const data = await resp.json();
       if (!data || !data.ok) return;
 
-      const minISO = data.minISO;
-      const maxISO = data.maxISO;
+      const minISO = data.minISO || "";
+      const maxISO = data.maxISO || "";
 
-      if (!minISO || !maxISO) return;
+      appendDatasetRangeToNote(minISO, maxISO);
 
       const dateFromInput = document.getElementById("dateFrom");
       const dateToInput = document.getElementById("dateTo");
 
-      // limit selectable dates to available dataset range
-      dateFromInput.min = minISO;
-      dateFromInput.max = maxISO;
-      dateToInput.min = minISO;
-      dateToInput.max = maxISO;
+      if (minISO && maxISO) {
+        dateFromInput.min = minISO;
+        dateFromInput.max = maxISO;
+        dateToInput.min = minISO;
+        dateToInput.max = maxISO;
 
-      // append dynamic date range note once
-      if (dataNote && !dataNote.dataset.rangeLoaded) {
-        dataNote.innerHTML +=
-          "<span class='range-line'>Available dataset date range: " +
-          "<span class='range-date'>" + escapeHtml(minISO) + "</span> to " +
-          "<span class='range-date'>" + escapeHtml(maxISO) + "</span>.</span>";
-        dataNote.dataset.rangeLoaded = "1";
+        // default to latest available range (last 30 days ending at dataset max date)
+        const maxMs = Date.parse(maxISO + "T00:00:00Z");
+        const minMs = Date.parse(minISO + "T00:00:00Z");
+
+        if (!Number.isNaN(maxMs) && !Number.isNaN(minMs)) {
+          const thirtyDaysMs = 30 * 24 * 60 * 60 * 1000;
+          let defaultFromMs = maxMs - thirtyDaysMs;
+          if (defaultFromMs < minMs) defaultFromMs = minMs;
+
+          const defaultFromISO = new Date(defaultFromMs).toISOString().slice(0, 10);
+
+          if (!dateFromInput.value) dateFromInput.value = defaultFromISO;
+          if (!dateToInput.value) dateToInput.value = maxISO;
+        } else {
+          // fallback if date parsing fails
+          if (!dateFromInput.value) dateFromInput.value = minISO;
+          if (!dateToInput.value) dateToInput.value = maxISO;
+        }
       }
     } catch (err) {
       console.log(err);
     }
   }
 
-  setInitialMessage();
-  loadDateBounds();
+  exportCsvBtn.addEventListener("click", function () {
+    if (!lastItems || !lastItems.length) return;
+
+    const csvText = buildCsv(lastItems);
+    downloadCsv(makeCsvFileName(), csvText);
+  });
+
+  showInitialHint();
+  loadDatasetDateRange();
 
   form.addEventListener("submit", async function (e) {
     e.preventDefault();
@@ -199,11 +308,13 @@ document.addEventListener("DOMContentLoaded", function () {
 
     // simple client checks
     if (!dateFrom || !dateTo || !division) {
-      results.innerHTML = "<p>Please fill in all required fields.</p>";
+      results.innerHTML = "<p>Missing required input.</p>";
+      if (resultsToolbar) resultsToolbar.hidden = true;
       return;
     }
     if (dateFrom > dateTo) {
-      results.innerHTML = "<p>From date must be on or before To date.</p>";
+      results.innerHTML = "<p>Date range is invalid.</p>";
+      if (resultsToolbar) resultsToolbar.hidden = true;
       return;
     }
 
@@ -218,7 +329,11 @@ document.addEventListener("DOMContentLoaded", function () {
     console.log("sending:");
     console.log(payload);
 
-    results.innerHTML = "<p>Loading results...</p>";
+    results.innerHTML = "<p>Loading...</p>";
+    lastItems = [];
+    lastQueryMeta = null;
+    if (resultsToolbar) resultsToolbar.hidden = true;
+    setLoadingState(true);
 
     try {
       const resp = await fetch("/api/hotspots", {
@@ -229,7 +344,8 @@ document.addEventListener("DOMContentLoaded", function () {
 
       if (!resp.ok) {
         const txt = await resp.text().catch(function () { return ""; });
-        results.innerHTML = "<p>Server error while loading results.</p><pre>" + escapeHtml(txt) + "</pre>";
+        results.innerHTML = "<p>Server error.</p><pre>" + escapeHtml(txt) + "</pre>";
+        if (resultsToolbar) resultsToolbar.hidden = true;
         return;
       }
 
@@ -239,20 +355,47 @@ document.addEventListener("DOMContentLoaded", function () {
       console.log(data);
 
       const items = data.items || [];
+
+      lastItems = items.slice();
+      lastQueryMeta = {
+        dateFrom: dateFrom,
+        dateTo: dateTo,
+        division: division,
+        severity: severity,
+        limit: limit
+      };
+
       if (!items.length) {
-        results.innerHTML =
-          "<p>No results found for the selected filters. Try a wider date range, another division, or a different severity.</p>";
+        let noResultsHtml = "";
+        noResultsHtml += "<div class='search-summary-box'>";
+        noResultsHtml += "<p class='search-summary-line'>";
+        noResultsHtml += "<span class='search-summary-label'>Search Summary:</span> ";
+        noResultsHtml += "No results found for ";
+        noResultsHtml += "<span class='search-summary-value'>Division " + escapeHtml(division) + "</span>";
+        if (severity) {
+          noResultsHtml += " with <span class='search-summary-value'>Severity " + escapeHtml(severity) + "</span>";
+        }
+        noResultsHtml += " from <span class='search-summary-value'>" + escapeHtml(dateFrom) + "</span> ";
+        noResultsHtml += "to <span class='search-summary-value'>" + escapeHtml(dateTo) + "</span>.";
+        noResultsHtml += "</p>";
+        noResultsHtml += "</div>";
+        results.innerHTML = noResultsHtml;
+        if (resultsToolbar) resultsToolbar.hidden = true;
         return;
       }
 
       let html = "";
-      html += renderSearchContext(payload, items.length);
-      html += renderSummary(items);
+      html += renderSummary(items, lastQueryMeta);
       html += renderTable(items);
       results.innerHTML = html;
+
+      if (resultsToolbar) resultsToolbar.hidden = false;
     } catch (err) {
       console.log(err);
-      results.innerHTML = "<p>Request failed. Please try again.</p>";
+      results.innerHTML = "<p>Request failed.</p>";
+      if (resultsToolbar) resultsToolbar.hidden = true;
+    } finally {
+      setLoadingState(false);
     }
   });
 });

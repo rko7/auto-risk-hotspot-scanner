@@ -54,6 +54,9 @@ h1 {
 
 .field-actions {
   flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 /* Bold labels in the form */
@@ -92,7 +95,8 @@ h1 {
 }
 
 /* Button */
-#searchBtn {
+#searchBtn,
+#exportCsvBtn {
   padding: 4px 10px;
   border: 1px solid #012169;
   border-radius: 4px;
@@ -104,7 +108,8 @@ h1 {
   cursor: pointer;
 }
 
-#searchBtn:hover {
+#searchBtn:hover,
+#exportCsvBtn:hover {
   background: #eef3fa;
 }
 
@@ -148,6 +153,11 @@ h1 {
   border: 0;
   border-top: 1px solid #cfd8e3;
   margin: 12px 0 16px;
+}
+
+/* Results toolbar */
+.results-toolbar {
+  margin: 0 0 8px;
 }
 
 /* Search summary box */
