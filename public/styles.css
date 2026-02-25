@@ -1,0 +1,150 @@
+/* Page */
+body {
+  margin: 0;
+  background: #ffffff;
+  color: #1f2937;
+  font-family: Georgia, "Times New Roman", serif;
+  line-height: 1.4;
+}
+
+.container {
+  max-width: 1100px;
+  margin: 16px auto;
+  padding: 0 16px 24px;
+}
+
+/* Title */
+h1 {
+  margin: 0 0 14px;
+  padding-bottom: 10px;
+  border-bottom: 2px solid #dbe3ee;
+  color: #012169;
+}
+
+/* Form */
+.search-form {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 12px;
+  margin-bottom: 10px;
+}
+
+.search-form label {
+  font-weight: 700;
+  color: #111827;
+}
+
+.search-form input[type="date"],
+.search-form input[type="number"],
+.search-form select {
+  padding: 4px 8px;
+  border: 1px solid #bfc8d6;
+  border-radius: 4px;
+  background: #fff;
+  color: #111827;
+  font: inherit;
+}
+
+.search-form select {
+  min-width: 260px;
+}
+
+.search-form input[type="number"] {
+  width: 72px;
+}
+
+#searchBtn {
+  padding: 4px 10px;
+  border: 1px solid #012169;
+  border-radius: 4px;
+  background: #f7f9fc;
+  color: #012169;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+#searchBtn:hover {
+  background: #eef3fa;
+}
+
+#searchBtn:disabled {
+  opacity: 0.7;
+  cursor: default;
+}
+
+/* Note */
+.data-note {
+  margin: 12px 0 8px;
+  padding: 10px 12px;
+  background: #f8fafc;
+  border-left: 4px solid #012169;
+  border-radius: 4px;
+  color: #1f2937;
+}
+
+.data-note strong,
+.data-note .note-label {
+  font-weight: 700;
+  color: #012169;
+}
+
+.data-note .range-line {
+  display: inline-block;
+  margin-top: 4px;
+}
+
+.data-note .range-date {
+  font-weight: 700;
+  color: #012169;
+}
+
+/* Divider */
+.section-divider {
+  border: 0;
+  border-top: 1px solid #cfd8e3;
+  margin: 12px 0 16px;
+}
+
+/* Results */
+#results p {
+  margin: 8px 0;
+}
+
+#results ul {
+  margin: 4px 0 10px 22px;
+}
+
+#results table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 8px;
+  background: #fff;
+}
+
+#results th,
+#results td {
+  border: 1px solid #cfd8e3;
+  padding: 8px 10px;
+  text-align: left;
+  vertical-align: top;
+}
+
+#results th {
+  background: #f3f6fb;
+  color: #012169;
+  font-weight: 700;
+}
+
+#results tr:nth-child(even) td {
+  background: #fbfdff;
+}
+
+#results pre {
+  background: #fff7f7;
+  border: 1px solid #e5c2c7;
+  padding: 10px;
+  overflow-x: auto;
+  white-space: pre-wrap;
+}
