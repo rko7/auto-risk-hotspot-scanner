@@ -315,7 +315,7 @@ document.addEventListener("DOMContentLoaded", function () {
     const span = document.createElement("span");
     span.className = "range-line";
     span.innerHTML =
-      "<br><br>&nbsp;&nbsp;Available dataset date range: " +
+      "<br>&nbsp;&nbsp;Available dataset date range: " +
       "<span class='range-date'>" + escapeHtml(minISO) + "</span> to " +
       "<span class='range-date'>" + escapeHtml(maxISO) + "</span>.";
 
