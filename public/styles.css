@@ -96,7 +96,8 @@ h1 {
 
 /* Button */
 #searchBtn,
-#exportCsvBtn {
+#exportCsvBtn,
+#resetBtn {
   padding: 4px 10px;
   border: 1px solid #012169;
   border-radius: 4px;
@@ -109,7 +110,8 @@ h1 {
 }
 
 #searchBtn:hover,
-#exportCsvBtn:hover {
+#exportCsvBtn:hover,
+#resetBtn:hover {
   background: #eef3fa;
 }
 

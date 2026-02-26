@@ -6,6 +6,7 @@ document.addEventListener("DOMContentLoaded", function () {
   const resultsToolbar = document.getElementById("resultsToolbar");
   const exportCsvBtn = document.getElementById("exportCsvBtn");
   const searchBtn = document.getElementById("searchBtn");
+  const resetBtn = document.getElementById("resetBtn");
   const dataNote = document.getElementById("dataNote");
 
   let lastItems = [];
@@ -316,12 +317,38 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   }
 
+  function clearResultsState() {
+    lastItems = [];
+    lastQueryMeta = null;
+    if (resultsToolbar) resultsToolbar.hidden = true;
+    setLoadingState(false);
+    showInitialHint();
+  }
+
   if (exportCsvBtn) {
     exportCsvBtn.addEventListener("click", function () {
       if (!lastItems || !lastItems.length) return;
 
       const csvText = buildCsv(lastItems);
       downloadCsv(makeCsvFileName(), csvText);
+    });
+  }
+
+  // keep results view consistent when the form is reset
+  form.addEventListener("reset", function () {
+    clearResultsState();
+
+    // allow the native reset to apply, then re-apply dataset defaults
+    setTimeout(function () {
+      loadDatasetDateRange();
+    }, 0);
+  });
+
+  // optional: allow manual reset button click to also clear results immediately
+  if (resetBtn) {
+    resetBtn.addEventListener("click", function () {
+      // native reset event will run, this is just for responsiveness
+      if (resultsToolbar) resultsToolbar.hidden = true;
     });
   }
 
