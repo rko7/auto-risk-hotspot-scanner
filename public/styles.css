@@ -3,7 +3,7 @@ body {
   margin: 0;
   background: #ffffff;
   color: #1f2937;
-  font-family: Georgia, "Times New Roman", serif;
+  font-family: "Palatino Linotype", Palatino, "Book Antiqua", "Times New Roman", serif;
   line-height: 1.4;
 }
 
@@ -19,6 +19,86 @@ h1 {
   padding-bottom: 10px;
   border-bottom: 2px solid #dbe3ee;
   color: #012169;
+}
+
+/* Toast */
+.toast-host {
+  position: fixed;
+  top: 14px;
+  right: 14px;
+  z-index: 9999;
+  width: min(380px, 92vw);
+}
+
+.toast {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid #dbe3ee;
+  background: #ffffff;
+  box-shadow: 0 8px 24px rgba(17, 24, 39, 0.12);
+  margin-bottom: 10px;
+  animation: toastIn 180ms ease-out;
+}
+
+.toast-left {
+  width: 6px;
+  border-radius: 8px;
+  flex: 0 0 6px;
+  height: 100%;
+  min-height: 36px;
+}
+
+.toast-body {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-family: "Segoe UI", Tahoma, Arial, sans-serif;
+}
+
+.toast-title {
+  margin: 0 0 4px;
+  font-weight: 800;
+  color: #111827;
+  font-size: 0.95rem;
+}
+
+.toast-msg {
+  margin: 0;
+  color: #1f2937;
+  font-size: 0.95rem;
+}
+
+.toast-close {
+  border: 0;
+  background: transparent;
+  color: #6b7280;
+  cursor: pointer;
+  padding: 2px 6px;
+  font-size: 18px;
+  line-height: 1;
+}
+
+.toast-close:hover {
+  color: #111827;
+}
+
+.toast-success .toast-left { background: #2f6f44; }
+.toast-success { border-color: #cfe8d7; background: #f3faf4; }
+
+.toast-error .toast-left { background: #c8102e; }
+.toast-error { border-color: #f2c2cc; background: #fff5f6; }
+
+.toast-info .toast-left { background: #012169; }
+.toast-info { border-color: #dbe3ee; background: #f4f8ff; }
+
+.toast-warn .toast-left { background: #c9a227; }
+.toast-warn { border-color: #f2e3b1; background: #fff9e8; }
+
+@keyframes toastIn {
+  from { transform: translateY(-8px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
 }
 
 /* Form layout */
@@ -174,7 +254,7 @@ h1 {
 
 .search-summary-line {
   margin: 0;
-  font-family: "Segoe UI", Tahoma, Arial, sans-serif;
+  font-family: "Palatino Linotype", Palatino, "Book Antiqua", "Times New Roman", serif;
 }
 
 .search-summary-label {
@@ -182,11 +262,19 @@ h1 {
   font-weight: 700;
 }
 
+/* summary values: black + underline */
 .search-summary-value {
   font-weight: 700;
-  color: inherit;
+  color: #111827;
+  text-decoration: underline;
+  text-underline-offset: 2px;
   font-size: inherit;
-  font-family: "Segoe UI", Tahoma, Arial, sans-serif;
+  font-family: "Palatino Linotype", Palatino, "Book Antiqua", "Times New Roman", serif;
+}
+
+/* keep results typography consistent */
+#results {
+  font-family: "Palatino Linotype", Palatino, "Book Antiqua", "Times New Roman", serif;
 }
 
 /* Results area text spacing */
@@ -277,15 +365,18 @@ h1 {
   margin-bottom: 4px;
 }
 
+/* slightly smaller than Top Divisions/Top Severity headings */
 .chart-label {
   font-weight: 700;
   color: #111827;
+  font-size: 0.9rem;
 }
 
 .chart-value {
   color: #374151;
-  font-size: 0.95rem;
+  font-size: 0.9rem;
   font-variant-numeric: tabular-nums;
+  font-family: "Segoe UI", Tahoma, Arial, sans-serif;
 }
 
 .chart-track {
@@ -299,9 +390,9 @@ h1 {
 
 .chart-fill {
   height: 100%;
-  background: #012169; /* Ontario blue */
+  background: #012169;
   border-radius: 999px;
-  min-width: 2px; /* tiny values still visible */
+  min-width: 2px;
 }
 
 /* Medium screens */
@@ -322,6 +413,13 @@ h1 {
 
 /* Small screens */
 @media (max-width: 640px) {
+  .toast-host {
+    left: 50%;
+    right: auto;
+    transform: translateX(-50%);
+    width: min(380px, 94vw);
+  }
+
   .search-form {
     flex-direction: column;
     align-items: stretch;
@@ -361,7 +459,8 @@ h1 {
     width: 84px;
   }
 
-  .field-actions #searchBtn {
+  .field-actions #searchBtn,
+  .field-actions #resetBtn {
     flex: 1 1 auto;
     width: auto;
     box-sizing: border-box;
@@ -387,7 +486,8 @@ h1 {
 
   .field-actions label,
   .field-actions input[type="number"],
-  .field-actions #searchBtn {
+  .field-actions #searchBtn,
+  .field-actions #resetBtn {
     flex: 0 0 auto;
     width: 100%;
     box-sizing: border-box;

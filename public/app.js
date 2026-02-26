@@ -8,9 +8,14 @@ document.addEventListener("DOMContentLoaded", function () {
   const searchBtn = document.getElementById("searchBtn");
   const resetBtn = document.getElementById("resetBtn");
   const dataNote = document.getElementById("dataNote");
+  const toastHost = document.getElementById("toastHost");
 
   let lastItems = [];
   let lastQueryMeta = null;
+
+  // toast state
+  let toastTimer = null;
+  let activeToastEl = null;
 
   function escapeHtml(s) {
     return String(s)
@@ -39,6 +44,62 @@ document.addEventListener("DOMContentLoaded", function () {
       }
     }
     return "";
+  }
+
+  function setLoadingState(isLoading) {
+    if (!searchBtn) return;
+    searchBtn.disabled = !!isLoading;
+    searchBtn.textContent = isLoading ? "Loading..." : "Search";
+  }
+
+  function showInitialHint() {
+    results.innerHTML = "<p>Select a <strong>Date Range</strong> and <strong>Police Division</strong>, then click <strong>Search</strong>.</p>";
+  }
+
+  function clearToast() {
+    if (toastTimer) {
+      clearTimeout(toastTimer);
+      toastTimer = null;
+    }
+    if (activeToastEl && activeToastEl.parentNode) {
+      activeToastEl.parentNode.removeChild(activeToastEl);
+    }
+    activeToastEl = null;
+  }
+
+  function showToast(type, title, message, autoMs) {
+    if (!toastHost) return;
+
+    // single active toast only
+    clearToast();
+
+    const safeType = type || "info";
+    const ms = typeof autoMs === "number" ? autoMs : (safeType === "error" ? 6500 : 4200);
+
+    const wrap = document.createElement("div");
+    wrap.className = "toast toast-" + safeType;
+    wrap.setAttribute("role", safeType === "error" ? "alert" : "status");
+    wrap.innerHTML =
+      "<div class='toast-left'></div>" +
+      "<div class='toast-body'>" +
+        "<p class='toast-title'>" + escapeHtml(title || "Notice") + "</p>" +
+        "<p class='toast-msg'>" + escapeHtml(message || "") + "</p>" +
+      "</div>" +
+      "<button class='toast-close' type='button' aria-label='Close'>&times;</button>";
+
+    const closeBtn = wrap.querySelector(".toast-close");
+    if (closeBtn) {
+      closeBtn.addEventListener("click", function () {
+        clearToast();
+      });
+    }
+
+    toastHost.appendChild(wrap);
+    activeToastEl = wrap;
+
+    toastTimer = setTimeout(function () {
+      clearToast();
+    }, ms);
   }
 
   function topCounts(items, fieldCandidates) {
@@ -244,16 +305,6 @@ document.addEventListener("DOMContentLoaded", function () {
     return "toronto_hotspots_div" + div + sev + "_" + from + "_to_" + to + ".csv";
   }
 
-  function setLoadingState(isLoading) {
-    if (!searchBtn) return;
-    searchBtn.disabled = !!isLoading;
-    searchBtn.textContent = isLoading ? "Loading..." : "Search";
-  }
-
-  function showInitialHint() {
-    results.innerHTML = "<p>Select a <strong>Date Range</strong> and <strong>Police Division</strong>, then click <strong>Search</strong>.</p>";
-  }
-
   function appendDatasetRangeToNote(minISO, maxISO) {
     if (!dataNote) return;
     if (!minISO || !maxISO) return;
@@ -327,27 +378,32 @@ document.addEventListener("DOMContentLoaded", function () {
 
   if (exportCsvBtn) {
     exportCsvBtn.addEventListener("click", function () {
-      if (!lastItems || !lastItems.length) return;
+      if (!lastItems || !lastItems.length) {
+        showToast("warn", "Nothing to export", "Run a search first to export results to CSV.");
+        return;
+      }
 
       const csvText = buildCsv(lastItems);
       downloadCsv(makeCsvFileName(), csvText);
+      showToast("success", "CSV exported", "Your results were downloaded successfully.");
     });
   }
 
   // keep results view consistent when the form is reset
   form.addEventListener("reset", function () {
+    clearToast();
     clearResultsState();
 
-    // allow the native reset to apply, then re-apply dataset defaults
+    // allow native reset first, then re-apply dataset defaults
     setTimeout(function () {
       loadDatasetDateRange();
     }, 0);
+
+    showToast("info", "Form reset", "Inputs and results were cleared.");
   });
 
-  // optional: allow manual reset button click to also clear results immediately
   if (resetBtn) {
     resetBtn.addEventListener("click", function () {
-      // native reset event will run, this is just for responsiveness
       if (resultsToolbar) resultsToolbar.hidden = true;
     });
   }
@@ -368,11 +424,13 @@ document.addEventListener("DOMContentLoaded", function () {
     if (!dateFrom || !dateTo || !division) {
       results.innerHTML = "<p>Missing required input.</p>";
       if (resultsToolbar) resultsToolbar.hidden = true;
+      showToast("error", "Missing required input", "Please select a date range and a police division before searching.");
       return;
     }
     if (dateFrom > dateTo) {
       results.innerHTML = "<p>Date range is invalid.</p>";
       if (resultsToolbar) resultsToolbar.hidden = true;
+      showToast("error", "Invalid date range", "From date must be on or before To date.");
       return;
     }
 
@@ -391,7 +449,9 @@ document.addEventListener("DOMContentLoaded", function () {
     lastItems = [];
     lastQueryMeta = null;
     if (resultsToolbar) resultsToolbar.hidden = true;
+    clearToast();
     setLoadingState(true);
+    showToast("info", "Searching", "Fetching results from the TPS dataset...", 2200);
 
     try {
       const resp = await fetch("/api/hotspots", {
@@ -404,6 +464,7 @@ document.addEventListener("DOMContentLoaded", function () {
         const txt = await resp.text().catch(function () { return ""; });
         results.innerHTML = "<p>Server error.</p><pre>" + escapeHtml(txt) + "</pre>";
         if (resultsToolbar) resultsToolbar.hidden = true;
+        showToast("error", "Server error", "The server could not load results. Please try again.");
         return;
       }
 
@@ -439,6 +500,8 @@ document.addEventListener("DOMContentLoaded", function () {
         noResultsHtml += "</div>";
         results.innerHTML = noResultsHtml;
         if (resultsToolbar) resultsToolbar.hidden = true;
+
+        showToast("warn", "No results", "Try a wider date range, a different division, or another severity.");
         return;
       }
 
@@ -448,10 +511,13 @@ document.addEventListener("DOMContentLoaded", function () {
       results.innerHTML = html;
 
       if (resultsToolbar) resultsToolbar.hidden = false;
+
+      showToast("success", "Results loaded", "Successfully loaded " + items.length + " record(s).");
     } catch (err) {
       console.log(err);
       results.innerHTML = "<p>Request failed.</p>";
       if (resultsToolbar) resultsToolbar.hidden = true;
+      showToast("error", "Request failed", "Network error or server not reachable. Please try again.");
     } finally {
       setLoadingState(false);
     }
