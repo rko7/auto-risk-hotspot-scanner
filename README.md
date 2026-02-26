@@ -18,6 +18,8 @@ A small full-stack web app that lets users search Toronto Police Service (TPS) K
 - Date picker min/max limits based on dataset bounds
 - Default date range set to the **latest available period**
 - Results sorted by **latest date first** (`DATE DESC`)
+- Reset button clears inputs and results
+- Toast notifications for success, warning, and error states
 
 ## Tech Stack
 
@@ -58,20 +60,21 @@ http://localhost:3000/app
 ### API Flow (End-to-End)
 1. User enters search inputs on the frontend form.
 2. Frontend sends an AJAX POST request to:
- - `/api/hotspots`
+   - `/api/hotspots`
 3. Express backend:
- - validates inputs
- - builds ArcGIS `where` query
- - applies optional severity filter
- - applies sorting (`DATE DESC`) 
- - calls TPS ArcGIS API
- - returns JSON results
+   - validates inputs
+   - builds ArcGIS `where` query
+   - applies optional severity filter
+   - applies sorting (`DATE DESC`) 
+   - calls TPS ArcGIS API
+   - returns JSON results
 4. Frontend renders:
- - search summary context
- - summary statistics
- - search summary context
- - results table
- - CSV export uses current results in memory
+   - search summary context
+   - summary statistics
+   - search summary context
+   - results table
+   - CSV export uses current results in memory
+   - polish reset behavior and tighten note date range spacing
 
 ### Notes About Data
 - DIVISION and DISTRICT values may not always align one-to-one.
@@ -93,4 +96,6 @@ http://localhost:3000/app
 - Dynamic rendering of API results
 - Simple client-side data visualization (bar chart summary)
 - CSV export of filtered results
+- Reset and validation handling
+- User feedback via toast notifications
 - Git-based development with incremental commits
